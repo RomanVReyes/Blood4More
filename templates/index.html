@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMAN - Red de Donación</title>
+    <style>
+        :root {
+            --primary-red: #d32f2f;
+            --hover-red: #b71c1c;
+            --bg-color: #f4f7f6;
+            --text-main: #333;
+            --text-light: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem 2rem;
+            max-width: 800px;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            color: var(--primary-red);
+            margin-bottom: 1rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border-top: 5px solid transparent;
+        }
+
+        .role-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--primary-red);
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .role-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .role-card p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-red);
+        }
+
+        /* Responsive para celulares */
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .role-card {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ROMAN</h1>
+        <p>Sistema inteligente de conexión para donantes, bancos de sangre y hospitales. Elige tu perfil para comenzar.</p>
+    </header>
+
+    <main class="cards-container">
+        <div class="role-card" onclick="window.location.href='/registro/donante'">
+            <div class="icon">🩸</div>
+            <h2>Soy Donante</h2>
+            <p>Regístrate, descubre campañas cercanas, verifica tu elegibilidad y ayuda a salvar vidas.</p>
+            <a href="/registro/donante" class="btn">Entrar como Donante</a>
+        </div>
+
+        <div class="role-card" onclick="window.location.href='/registro/hospital'">
+            <div class="icon">🏥</div>
+            <h2>Soy Hospital</h2>
+            <p>Solicita unidades de sangre para tus pacientes, gestiona urgencias y monitorea envíos.</p>
+            <a href="/registro/hospital" class="btn">Entrar como Hospital</a>
+        </div>
+
+        <div class="role-card" onclick="window.location.href='/registro/banco'">
+            <div class="icon">🧬</div>
+            <h2>Soy Banco de Sangre</h2>
+            <p>Gestiona tu inventario en tiempo real, lanza campañas y responde a hospitales.</p>
+            <a href="/registro/banco" class="btn">Entrar como Banco</a>
+        </div>
+    </main>
+
+</body>
+</html>
