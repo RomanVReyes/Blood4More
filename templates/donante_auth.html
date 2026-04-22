@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Donante - ROMAN</title>
+    <style>
+        :root {
+            --primary-red: #d32f2f;
+            --hover-red: #b71c1c;
+            --bg-color: #f4f7f6;
+            --text-main: #333;
+            --text-light: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        .icon { font-size: 3.5rem; margin-bottom: 10px; }
+        h2 { color: var(--text-main); margin-bottom: 10px; }
+        p { color: var(--text-light); margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; }
+        .btn { display: block; width: 100%; background-color: var(--primary-red); color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-size: 1rem; margin-bottom: 15px; transition: 0.3s; font-weight: bold; border: 2px solid var(--primary-red); }
+        .btn:hover { background-color: var(--hover-red); border-color: var(--hover-red); }
+        .btn-outline { background-color: white; color: var(--primary-red); }
+        .btn-outline:hover { background-color: #fff0f0; }
+        .back-link { display: inline-block; margin-top: 10px; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: var(--primary-red); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🩸</div>
+        <h2>Panel de Donantes</h2>
+        <p>Bienvenido a la red ROMAN. Por favor, selecciona una opción para continuar.</p>
+        
+        <a href="/donante/login" class="btn">Iniciar Sesión</a>
+        <a href="/donante/registro" class="btn btn-outline">Crear Nueva Cuenta</a>
+        
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

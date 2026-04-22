@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Donante - ROMAN</title>
+    <style>
+        :root { --primary-red: #d32f2f; --hover-red: #b71c1c; --bg-color: #f4f7f6; --text-main: #333; --text-light: #666; --border: #ddd; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { color: var(--text-main); margin-bottom: 25px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-light); font-size: 0.9rem; }
+        input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; transition: 0.3s; }
+        input:focus { border-color: var(--primary-red); outline: none; }
+        .btn { width: 100%; background-color: var(--primary-red); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: 0.3s; font-weight: bold; margin-top: 10px; }
+        .btn:hover { background-color: var(--hover-red); }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: var(--primary-red); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Iniciar Sesión</h2>
+        <form action="/donante/login" method="POST">
+            <div class="form-group">
+                <label>Correo Electrónico:</label>
+                <input type="email" name="email" placeholder="tu@correo.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+        <a href="/donante" class="back-link">Volver a opciones</a>
+    </div>
+</body>
+</html>

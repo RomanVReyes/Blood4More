@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"roman-sangre/internal/database" // Asegúrate que 'roman-sangre' coincida con tu go.mod
+	"roman-sangre/internal/database"
+	"roman-sangre/internal/handlers"
 
 	"github.com/joho/godotenv"
 )
@@ -29,6 +30,15 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
+	})
+
+	// Rutas de Donante
+	http.HandleFunc("/donante", handlers.ShowDonorAuth)
+	http.HandleFunc("/donante/login", handlers.ShowDonorLogin)
+	http.HandleFunc("/donante/registro", handlers.ShowDonorRegister)
+
+	http.HandleFunc("/donante/dashboard", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "templates/donante_dashboard.html")
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

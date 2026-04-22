@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel - ROMAN</title>
+    <style>
+        :root {
+            --primary-red: #d32f2f;
+            --hover-red: #b71c1c;
+            --success-green: #2e7d32;
+            --warning-orange: #ed6c02;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --text-light: #666;
+            --border-color: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); }
+
+        /* Navegación Superior */
+        nav { background-color: var(--primary-red); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        nav h1 { font-size: 1.5rem; letter-spacing: 1px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; font-size: 0.95rem; }
+        .nav-links a:hover { text-decoration: underline; }
+
+        /* Contenedor Principal */
+        .dashboard-container { max-width: 1100px; margin: 2rem auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+
+        /* Tarjetas Base */
+        .card { background: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-main); border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+
+        /* Perfil de Usuario */
+        .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .blood-badge { background-color: var(--primary-red); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; }
+        
+        /* Status de Elegibilidad */
+        .status-box { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px; }
+        .status-ineligible { background-color: #fff3e0; color: var(--warning-orange); border: 1px solid #ffe0b2; }
+        .status-eligible { background-color: #e8f5e9; color: var(--success-green); border: 1px solid #c8e6c9; }
+
+        /* Botones de Acción */
+        .btn { display: inline-block; width: 100%; text-align: center; background-color: var(--primary-red); color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.3s; border: none; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background-color: var(--hover-red); }
+
+        /* Alertas y Notificaciones */
+        .alert-card { background-color: #ffebee; border-left: 5px solid var(--primary-red); padding: 15px; border-radius: 4px; margin-bottom: 15px; }
+        .alert-card h3 { color: var(--primary-red); font-size: 1.1rem; margin-bottom: 5px; }
+        .alert-card p { font-size: 0.9rem; color: var(--text-main); }
+
+        /* Tabla de Historial */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+        th { color: var(--text-light); font-weight: 600; }
+        tr:hover { background-color: var(--bg-color); }
+        .status-tag { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; background-color: #e8f5e9; color: var(--success-green); }
+
+        /* Responsive */
+        @media (max-width: 768px) { .dashboard-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h1>ROMAN</h1>
+        <div class="nav-links">
+            <a href="#">Mi Perfil</a>
+            <a href="/donante/login">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        
+        <div class="col-left">
+            <div class="card">
+                <div class="profile-header">
+                    <div class="blood-badge">O+</div>
+                    <div>
+                        <h2 style="border:none; padding:0; margin:0;">Juan Perez</h2>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Tijuana, Baja California</p>
+                    </div>
+                </div>
+
+                <div class="status-box status-ineligible">
+                    ⚠️ No eres elegible para donar
+                    <div style="font-size: 0.85rem; margin-top: 5px; font-weight: normal;">
+                        Próxima fecha elegible: <strong>07 Abril 2026</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 5px;"><strong>Última donación:</strong> 10 Feb 2026</p>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 5px;"><strong>Donaciones totales:</strong> 1</p>
+                </div>
+
+                <a href="#" class="btn" style="background-color: var(--text-light); pointer-events: none; opacity: 0.7;">Agendar Donación (Bloqueado)</a>
+            </div>
+        </div>
+
+        <div class="col-right">
+            
+            <div class="card" style="margin-bottom: 20px;">
+                <h2>🔔 Alertas en tu zona</h2>
+                <div class="alert-card">
+                    <h3>¡Urgencia Crítica: Hospital General!</h3>
+                    <p>Se requiere donación urgente de sangre <strong>O+</strong> cercana a tu ubicación. Paciente en estado crítico necesita 3 unidades.</p>
+                    <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 5px;">Recibida hace 2 horas</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🩸 Historial de Donaciones</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Banco Receptor</th>
+                                <th>Volumen</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10 Feb 2026</td>
+                                <td>Cruz Roja Central</td>
+                                <td>450 ml</td>
+                                <td><span class="status-tag">Aceptada</span></td>
+                            </tr>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
