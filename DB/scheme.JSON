@@ -1,4 +1,20 @@
 {
+  "catalogo_padecimientos": [
+    { "_id": "pad_001", "nombre": "Diabetes" },
+    { "_id": "pad_002", "nombre": "Hipertensión" },
+    { "_id": "pad_003", "nombre": "Asma" },
+    { "_id": "pad_004", "nombre": "Enfermedad cardíaca" },
+    { "_id": "pad_005", "nombre": "Anemia" }
+  ],
+
+  "catalogo_medicamentos": [
+    { "_id": "med_001", "nombre": "Metformina" },
+    { "_id": "med_002", "nombre": "Insulina" },
+    { "_id": "med_003", "nombre": "Paracetamol" },
+    { "_id": "med_004", "nombre": "Ibuprofeno" },
+    { "_id": "med_005", "nombre": "Aspirina" }
+  ],
+
   "donantes": [
     {
       "_id": "donante_001",
@@ -8,6 +24,7 @@
       "peso": 75,
       "tipoSangre": "O+",
       "factorRH": "positivo",
+
       "ubicacionGeografica": {
         "coordenadas": {
           "latitud": 19.4326,
@@ -16,21 +33,27 @@
         "direccion": "Calle Falsa 123",
         "zona": "BajaCalifornia"
       },
+
       "datosContacto": {
         "telefono": "5551112233",
         "correo": "juan@email.com",
         "whatsapp": "5551112233"
       },
+
       "condicionesMedicas": {
-        "padecimientos": ["diabetes"],
-        "medicamentos": ["metformina"]
+        "padecimientos": ["pad_001"],
+        "medicamentos": ["med_001"]
       },
+
       "fechaUltimaDonacion": "2026-02-10",
+
       "elegibilidad": {
         "estado": false,
         "fechaProximaElegible": "2026-04-07"
       },
+
       "preferenciasNotificacion": ["whatsapp", "correo"],
+
       "historialDonaciones": [
         {
           "idDonacion": "don_1001",
@@ -40,6 +63,7 @@
           "estadoFinal": "aceptada"
         }
       ],
+
       "fechaRegistro": "2025-10-01"
     }
   ],
@@ -49,6 +73,7 @@
       "_id": "banco_001",
       "nombreBanco": "Cruz Roja Central",
       "tipoInstitucion": "cruz_roja",
+
       "ubicacionGeografica": {
         "coordenadas": {
           "latitud": 19.4200,
@@ -57,6 +82,7 @@
         "direccion": "Av Reforma 500",
         "zona": "CDMX"
       },
+
       "horarios": [
         {
           "dia": "lunes",
@@ -64,11 +90,14 @@
           "cierre": "18:00"
         }
       ],
+
       "capacidadAlmacenamiento": 5000,
+
       "contactoEmergencia": {
         "telefono": "5559998888",
         "correo": "emergencias@banco.com"
       },
+
       "personalResponsable": [
         {
           "nombre": "Dr. Lopez",
@@ -77,6 +106,7 @@
           "correo": "lopez@banco.com"
         }
       ],
+
       "inventario": [
         {
           "tipoSangre": "O+",
@@ -91,6 +121,7 @@
           ]
         }
       ],
+
       "umbralMinimo": {
         "O+": 50,
         "A+": 40
@@ -102,6 +133,7 @@
     {
       "_id": "hospital_001",
       "nombreHospital": "Hospital General",
+
       "ubicacionGeografica": {
         "coordenadas": {
           "latitud": 19.40,
@@ -110,10 +142,12 @@
         "direccion": "Av Salud 200",
         "zona": "CDMX"
       },
+
       "datosContacto": {
         "telefono": "5554443333",
         "correo": "contacto@hospital.com"
       },
+
       "medicos": [
         {
           "idMedico": "med_001",
@@ -175,37 +209,13 @@
   ],
 
   "compatibilidad_sanguinea": [
-    {
-      "tipo": "O-",
-      "compatibleCon": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-    },
-    {
-      "tipo": "A+",
-      "compatibleCon": ["A+", "AB+"]
-    },
-    {
-      "tipo": "A-",
-      "compatibleCon": ["A-", "A+", "AB-", "AB+"]
-    },
-    {
-      "tipo": "B+",
-      "compatibleCon": ["B+", "AB+"]
-    },
-    {
-      "tipo": "B-",
-      "compatibleCon": ["B-", "B+", "AB-", "AB+"]
-    },
-    {
-      "tipo": "AB+",
-      "compatibleCon": ["AB+"]
-    },
-    {
-      "tipo": "AB-",
-      "compatibleCon": ["AB-", "AB+"]
-    },
-    {
-      "tipo": "O+",
-      "compatibleCon": ["O+", "A+", "B+", "AB+"]
-    }
+    { "tipo": "O-", "compatibleCon": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+    { "tipo": "A+", "compatibleCon": ["A+", "AB+"] },
+    { "tipo": "A-", "compatibleCon": ["A-", "A+", "AB-", "AB+"] },
+    { "tipo": "B+", "compatibleCon": ["B+", "AB+"] },
+    { "tipo": "B-", "compatibleCon": ["B-", "B+", "AB-", "AB+"] },
+    { "tipo": "AB+", "compatibleCon": ["AB+"] },
+    { "tipo": "AB-", "compatibleCon": ["AB-", "AB+"] },
+    { "tipo": "O+", "compatibleCon": ["O+", "A+", "B+", "AB+"] }
   ]
 }
