@@ -55,6 +55,12 @@
         <h2>Registro de Donante</h2>
         <p class="subtitle">Únete a la red y ayuda a salvar vidas.</p>
         
+        {{if .ErrorMessage}}
+        <div style="background-color: #ffebee; color: var(--primary-red); padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; border: 1px solid #ffcdd2;">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+        
         <form action="/donante/registro" method="POST">
             
             <h3 class="section-title">1. Cuenta y Contacto</h3>

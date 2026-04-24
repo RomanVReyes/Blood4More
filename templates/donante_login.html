@@ -23,6 +23,13 @@
 <body>
     <div class="card">
         <h2>Iniciar Sesión</h2>
+        
+        {{if .ErrorMessage}}
+        <div style="background-color: #ffebee; color: var(--primary-red); padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; border: 1px solid #ffcdd2;">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+
         <form action="/donante/login" method="POST">
             <div class="form-group">
                 <label>Correo Electrónico:</label>

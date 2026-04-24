@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
+
 	"roman-sangre/internal/models"
 	"roman-sangre/internal/repository"
 )
@@ -15,20 +18,15 @@ import (
 type DatosRegistro struct {
 	Padecimientos []models.ItemCatalogo
 	Medicamentos  []models.ItemCatalogo
+	ErrorMessage  string
 }
 
 func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 	// ---------------------------------------------------
-	// METODO GET: Mostrar formulario con datos de la BD
+	// METODO GET: Mostrar formulario
 	// ---------------------------------------------------
 	if r.Method == http.MethodGet {
-		padecimientos, medicamentos, err := repository.GetCatalogosMedicos()
-		if err != nil {
-			log.Println("Error obteniendo catálogos:", err)
-			http.Error(w, "Error interno del servidor", http.StatusInternalServerError)
-			return
-		}
-
+		padecimientos, medicamentos, _ := repository.GetCatalogosMedicos()
 		datos := DatosRegistro{
 			Padecimientos: padecimientos,
 			Medicamentos:  medicamentos,
@@ -49,13 +47,37 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Convertir tipos de datos
+		email := r.FormValue("email")
+
+		// 1. VALIDACIÓN DE DUPLICADOS
+		_, err = repository.GetDonanteByEmail(email)
+		if err == nil {
+			// Si err es nil, significa que SÍ encontró un usuario con ese correo.
+			padecimientos, medicamentos, _ := repository.GetCatalogosMedicos()
+			datos := DatosRegistro{
+				Padecimientos: padecimientos,
+				Medicamentos:  medicamentos,
+				ErrorMessage:  "El correo electrónico ingresado ya está registrado. Intenta iniciar sesión.",
+			}
+
+			// Volvemos a renderizar la página mostrando el error
+			tmpl := template.Must(template.ParseFiles("templates/donante_registro.html"))
+			tmpl.Execute(w, datos)
+			return
+		} else if err != mongo.ErrNoDocuments {
+			// Si el error no es "ErrNoDocuments" (no encontrado), es un error real de la BD
+			http.Error(w, "Error verificando la base de datos", http.StatusInternalServerError)
+			return
+		}
+
+		// Si llegamos aquí, el error fue mongo.ErrNoDocuments, lo que significa que el correo está libre.
+		// ... (Aquí va el resto de la conversión de datos: edad, peso, latitud, etc.)
+
 		edad, _ := strconv.Atoi(r.FormValue("edad"))
 		peso, _ := strconv.ParseFloat(r.FormValue("peso"), 64)
 		latitud, _ := strconv.ParseFloat(r.FormValue("latitud"), 64)
 		longitud, _ := strconv.ParseFloat(r.FormValue("longitud"), 64)
 
-		// Extraer tipo de sangre y factor RH ("O+" -> Tipo: "O", RH: "+")
 		tipoSangreCompleto := r.FormValue("tipoSangre")
 		tipo := strings.TrimRight(tipoSangreCompleto, "+-")
 		factorStr := "positivo"
@@ -63,38 +85,40 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 			factorStr = "negativo"
 		}
 
-		// Construir el modelo Donante
+		passwordPlano := r.FormValue("password")
+		hash, err := bcrypt.GenerateFromPassword([]byte(passwordPlano), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Error procesando contraseña", 500)
+			return
+		}
+
 		nuevoDonante := models.Donante{
-			// Nota: Mongo creará un ObjectID único automáticamente
-			Nombre:     r.FormValue("nombre"),
-			Password:   r.FormValue("password"), // ¡Importante: En el futuro hay que encriptarla!
+			Nombre: r.FormValue("nombre"),
+
+			Password: string(hash),
+
 			Edad:       edad,
 			Genero:     r.FormValue("genero"),
 			Peso:       peso,
 			TipoSangre: tipo,
 			FactorRH:   factorStr,
 			UbicacionGeografica: models.Ubicacion{
-				Coordenadas: models.Coordenadas{
-					Latitud:  latitud,
-					Longitud: longitud,
-				},
-				Direccion: r.FormValue("direccion"),
-				Zona:      r.FormValue("zona"),
+				Coordenadas: models.Coordenadas{Latitud: latitud, Longitud: longitud},
+				Direccion:   r.FormValue("direccion"),
 			},
 			DatosContacto: models.DatosContacto{
-				Correo:   r.FormValue("email"),
+				Correo:   email,
 				Telefono: r.FormValue("telefono"),
 				Whatsapp: r.FormValue("whatsapp"),
 			},
 			CondicionesMedicas: models.CondicionesMedicas{
-				Padecimientos: r.Form["padecimientos"], // Parsea automáticamente los arrays de checkboxes
+				Padecimientos: r.Form["padecimientos"],
 				Medicamentos:  r.Form["medicamentos"],
 			},
 			PreferenciasNotificacion: r.Form["notificaciones"],
 			FechaRegistro:            time.Now().Format("2006-01-02"),
 		}
 
-		// Guardar en la base de datos
 		err = repository.CreateDonante(nuevoDonante)
 		if err != nil {
 			log.Println("Error creando donante:", err)
@@ -102,12 +126,10 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Redirigir al dashboard tras el registro exitoso
-		http.Redirect(w, r, "/donante/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
 		return
 	}
 
-	// Si no es GET ni POST
 	http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 }
 
@@ -120,22 +142,44 @@ func ShowDonorAuth(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 }
 
-// Mostrar y procesar el inicio de sesión del donante
+// =======================
+// LOGIN
+// =======================
 func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
-	// Mostrar formulario de login
+	// Estructura local para pasar errores a la vista de login
+	type LoginData struct {
+		ErrorMessage string
+	}
+
 	if r.Method == http.MethodGet {
-		http.ServeFile(w, r, "templates/donante_login.html")
+		tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
+		tmpl.Execute(w, LoginData{})
 		return
 	}
 
-	// Procesar formulario de login (POST)
 	if r.Method == http.MethodPost {
-		// Por ahora solo haremos una redirección simple al dashboard.
-		// TODO: Más adelante implementaremos la validación en la base de datos comparando correos y contraseñas.
+		email := r.FormValue("email")
+		password := r.FormValue("password")
 
+		// 🔎 Buscar usuario en DB
+		donante, err := repository.GetDonanteByEmail(email)
+		if err != nil {
+			// Usuario no encontrado
+			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
+			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
+			return
+		}
+
+		// 🔐 Comparar password
+		err = bcrypt.CompareHashAndPassword([]byte(donante.Password), []byte(password))
+		if err != nil {
+			// Contraseña incorrecta
+			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
+			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
+			return
+		}
+
+		// TODO: aquí puedes crear sesión luego
 		http.Redirect(w, r, "/donante/dashboard", http.StatusSeeOther)
-		return
 	}
-
-	http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 }

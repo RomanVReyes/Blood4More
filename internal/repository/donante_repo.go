@@ -58,3 +58,15 @@ func CreateDonante(donante models.Donante) error {
 
 	return nil
 }
+
+func GetDonanteByEmail(email string) (models.Donante, error) {
+	var donante models.Donante
+
+	collection := database.GetCollection("donantes")
+
+	err := collection.FindOne(context.TODO(), bson.M{
+		"datosContacto.correo": email,
+	}).Decode(&donante)
+
+	return donante, err
+}
