@@ -254,3 +254,43 @@ db.compatibilidad_sanguinea.insertMany([
 ])
 
 print("Base de datos cargada correctamente")
+
+
+// =======================
+// SESIONES (NUEVO)
+// =======================
+
+// Crear colección con un ejemplo de sesión
+db.sesiones.insertOne({
+  _id: "session_demo_001",
+
+  // Usuario asociado a la sesión
+  user_email: "juan@email.com",
+
+  // Fechas de control
+  created_at: new Date(),
+  expires_at: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+
+  // Estado de la sesión
+  is_active: true,
+
+  // Información opcional de seguridad
+  ip: "127.0.0.1",
+  user_agent: "Mozilla/5.0"
+})
+
+
+// =======================
+// ÍNDICES (MUY IMPORTANTE)
+// =======================
+
+// Expiración automática de sesiones
+db.sesiones.createIndex(
+  { expires_at: 1 },
+  { expireAfterSeconds: 0 }
+)
+
+// Búsqueda rápida por usuario
+db.sesiones.createIndex(
+  { user_email: 1 }
+)

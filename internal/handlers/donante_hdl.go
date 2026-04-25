@@ -13,12 +13,22 @@ import (
 
 	"roman-sangre/internal/models"
 	"roman-sangre/internal/repository"
+
+	"crypto/rand"
+	"encoding/hex"
 )
 
 type DatosRegistro struct {
 	Padecimientos []models.ItemCatalogo
 	Medicamentos  []models.ItemCatalogo
 	ErrorMessage  string
+}
+
+// Función auxiliar para crear IDs seguros
+func generateSessionID() string {
+	bytes := make([]byte, 32)
+	rand.Read(bytes)
+	return hex.EncodeToString(bytes)
 }
 
 func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +156,6 @@ func ShowDonorAuth(w http.ResponseWriter, r *http.Request) {
 // LOGIN
 // =======================
 func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
-	// Estructura local para pasar errores a la vista de login
 	type LoginData struct {
 		ErrorMessage string
 	}
@@ -164,7 +173,6 @@ func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
 		// 🔎 Buscar usuario en DB
 		donante, err := repository.GetDonanteByEmail(email)
 		if err != nil {
-			// Usuario no encontrado
 			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
 			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
 			return
@@ -173,13 +181,106 @@ func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
 		// 🔐 Comparar password
 		err = bcrypt.CompareHashAndPassword([]byte(donante.Password), []byte(password))
 		if err != nil {
-			// Contraseña incorrecta
 			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
 			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
 			return
 		}
 
-		// TODO: aquí puedes crear sesión luego
+		// 🎟️ CREAR LA SESIÓN EN MONGODB
+		sessionID := generateSessionID()
+		expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 días
+
+		nuevaSesion := models.Sesion{
+			ID:        sessionID,
+			UserEmail: donante.DatosContacto.Correo,
+			CreatedAt: time.Now(),
+			ExpiresAt: expiresAt,
+			IsActive:  true,
+			IP:        r.RemoteAddr,
+			UserAgent: r.UserAgent(),
+		}
+
+		err = repository.CreateSession(nuevaSesion)
+		if err != nil {
+			http.Error(w, "Error creando sesión", http.StatusInternalServerError)
+			return
+		}
+
+		// 🍪 GUARDAR EL ID DE SESIÓN EN UNA COOKIE
+		http.SetCookie(w, &http.Cookie{
+			Name:     "roman_session",
+			Value:    sessionID,
+			Expires:  expiresAt,
+			Path:     "/",
+			HttpOnly: true,  // Importante: evita ataques XSS
+			Secure:   false, // Cambiar a 'true' cuando uses HTTPS en producción
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		// Redirigir al dashboard
 		http.Redirect(w, r, "/donante/dashboard", http.StatusSeeOther)
 	}
+}
+
+// =======================
+// DASHBOARD (Protegido)
+// =======================
+func ShowDonorDashboard(w http.ResponseWriter, r *http.Request) {
+	// 1. Pedir el "gafete" (la cookie de sesión)
+	cookie, err := r.Cookie("roman_session")
+	if err != nil {
+		// No trae gafete -> Pa' fuera (al login)
+		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
+		return
+	}
+
+	// 2. Revisar si la sesión existe y está activa en MongoDB
+	sesion, err := repository.GetSession(cookie.Value)
+	if err != nil || sesion.ExpiresAt.Before(time.Now()) {
+		// Gafete falso o expirado -> Limpiar cookie y pa' fuera
+		http.SetCookie(w, &http.Cookie{
+			Name:   "roman_session",
+			Value:  "",
+			MaxAge: -1,
+			Path:   "/",
+		})
+		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
+		return
+	}
+
+	// 3. Buscar todos los datos del donante usando el email guardado en la sesión
+	donante, err := repository.GetDonanteByEmail(sesion.UserEmail)
+	if err != nil {
+		http.Redirect(w, r, "/donante/logout", http.StatusSeeOther)
+		return
+	}
+
+	// 4. Enviar los datos al HTML
+	tmpl := template.Must(template.ParseFiles("templates/donante_dashboard.html"))
+	tmpl.Execute(w, donante)
+}
+
+// =======================
+// CERRAR SESIÓN (Logout)
+// =======================
+func LogoutDonante(w http.ResponseWriter, r *http.Request) {
+	// 1. Obtener la cookie actual
+	cookie, err := r.Cookie("roman_session")
+	if err == nil {
+		// 2. Borrar la sesión de MongoDB para que ya no sirva
+		_ = repository.DeleteSession(cookie.Value)
+	}
+
+	// 3. Destruir la cookie en el navegador del usuario
+	http.SetCookie(w, &http.Cookie{
+		Name:     "roman_session",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour), // Fecha en el pasado
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+	})
+
+	// 4. Redirigir a la página de inicio o login
+	http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
 }

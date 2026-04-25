@@ -68,7 +68,7 @@
         <h1>ROMAN</h1>
         <div class="nav-links">
             <a href="#">Mi Perfil</a>
-            <a href="/donante/login">Cerrar Sesión</a>
+            <a href="/donante/logout">Cerrar Sesión</a> 
         </div>
     </nav>
 
@@ -77,10 +77,12 @@
         <div class="col-left">
             <div class="card">
                 <div class="profile-header">
-                    <div class="blood-badge">O+</div>
+                    <div class="blood-badge">
+                        {{.TipoSangre}}{{if eq .FactorRH "positivo"}}+{{else}}-{{end}}
+                    </div>
                     <div>
-                        <h2 style="border:none; padding:0; margin:0;">Juan Perez</h2>
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Tijuana, Baja California</p>
+                        <h2 style="border:none; padding:0; margin:0;">{{.Nombre}}</h2>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">{{.UbicacionGeografica.Zona}}</p>
                     </div>
                 </div>
 

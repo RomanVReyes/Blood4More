@@ -37,9 +37,7 @@ func main() {
 	http.HandleFunc("/donante/login", handlers.ShowDonorLogin)
 	http.HandleFunc("/donante/registro", handlers.ShowDonorRegister)
 
-	http.HandleFunc("/donante/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "templates/donante_dashboard.html")
-	})
+	http.HandleFunc("/donante/dashboard", handlers.ShowDonorDashboard)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Sistema operando correctamente")
