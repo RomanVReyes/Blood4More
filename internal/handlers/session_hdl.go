@@ -6,6 +6,7 @@ import (
 
 	"roman-sangre/internal/models"
 	"roman-sangre/internal/repository"
+	"roman-sangre/pkg/utils"
 )
 
 const SessionCookieName = "roman_session"
@@ -34,7 +35,7 @@ func DeleteSessionCookie(w http.ResponseWriter) {
 }
 
 func StartUserSession(w http.ResponseWriter, userID string, r *http.Request) error {
-	sessionID := generateSessionID()
+	sessionID := utils.GenerateSessionID()
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 
 	sesion := models.Session{

@@ -1,12 +1,10 @@
 package models
 
-// Estructura para leer los catálogos de Mongo
 type ItemCatalogo struct {
 	ID     string `bson:"_id"`
 	Nombre string `bson:"nombre"`
 }
 
-// Estructuras anidadas para el Donante
 type Coordenadas struct {
 	Latitud  float64 `bson:"latitud" json:"latitud"`
 	Longitud float64 `bson:"longitud" json:"longitud"`

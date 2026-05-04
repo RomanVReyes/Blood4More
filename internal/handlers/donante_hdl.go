@@ -13,9 +13,6 @@ import (
 
 	"roman-sangre/internal/models"
 	"roman-sangre/internal/repository"
-
-	"crypto/rand"
-	"encoding/hex"
 )
 
 type DatosRegistro struct {
@@ -24,17 +21,7 @@ type DatosRegistro struct {
 	ErrorMessage  string
 }
 
-// Función auxiliar para crear IDs seguros
-func generateSessionID() string {
-	bytes := make([]byte, 32)
-	rand.Read(bytes)
-	return hex.EncodeToString(bytes)
-}
-
 func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
-	// ---------------------------------------------------
-	// METODO GET: Mostrar formulario
-	// ---------------------------------------------------
 	if r.Method == http.MethodGet {
 		padecimientos, medicamentos, _ := repository.GetCatalogosMedicos()
 		datos := DatosRegistro{
@@ -47,9 +34,6 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ---------------------------------------------------
-	// METODO POST: Procesar y guardar registro
-	// ---------------------------------------------------
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
@@ -59,10 +43,8 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 
 		email := r.FormValue("email")
 
-		// 1. VALIDACIÓN DE DUPLICADOS
 		_, err = repository.GetDonanteByEmail(email)
 		if err == nil {
-			// Si err es nil, significa que SÍ encontró un usuario con ese correo.
 			padecimientos, medicamentos, _ := repository.GetCatalogosMedicos()
 			datos := DatosRegistro{
 				Padecimientos: padecimientos,
@@ -70,18 +52,13 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 				ErrorMessage:  "El correo electrónico ingresado ya está registrado. Intenta iniciar sesión.",
 			}
 
-			// Volvemos a renderizar la página mostrando el error
 			tmpl := template.Must(template.ParseFiles("templates/donante_registro.html"))
 			tmpl.Execute(w, datos)
 			return
 		} else if err != mongo.ErrNoDocuments {
-			// Si el error no es "ErrNoDocuments" (no encontrado), es un error real de la BD
 			http.Error(w, "Error verificando la base de datos", http.StatusInternalServerError)
 			return
 		}
-
-		// Si llegamos aquí, el error fue mongo.ErrNoDocuments, lo que significa que el correo está libre.
-		// ... (Aquí va el resto de la conversión de datos: edad, peso, latitud, etc.)
 
 		edad, _ := strconv.Atoi(r.FormValue("edad"))
 		peso, _ := strconv.ParseFloat(r.FormValue("peso"), 64)
@@ -143,7 +120,6 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 }
 
-// Mostrar la página principal de opciones para el donante (Auth)
 func ShowDonorAuth(w http.ResponseWriter, r *http.Request) {
 	log.Println("AUTH HANDLER")
 	if r.Method == http.MethodGet {
@@ -196,21 +172,18 @@ func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
 
 func ShowDonorDashboard(w http.ResponseWriter, r *http.Request) {
 
-	// 1. Obtener userID desde contexto
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
 		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
 		return
 	}
 
-	// 2. Buscar donante en DB
 	donante, err := repository.GetDonanteByID(userID)
 	if err != nil {
 		http.Error(w, "Error cargando datos", http.StatusInternalServerError)
 		return
 	}
 
-	// 3. Renderizar HTML con datos reales
 	tmpl := template.Must(template.ParseFiles("templates/donante_dashboard.html"))
 	tmpl.Execute(w, donante)
 }

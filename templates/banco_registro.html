@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <title>Registro Banco de Sangre - ROMAN</title>
+    <style>
+        :root { --primary-red: #d32f2f; --hover-red: #b71c1c; --bg-color: #f4f7f6; --text-main: #333; --text-light: #666; --border: #ddd; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px 20px; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 700px; }
+        h2 { color: var(--text-main); margin-bottom: 10px; text-align: center; }
+        .subtitle { text-align: center; color: var(--text-light); margin-bottom: 25px; font-size: 0.95rem; }
+        
+        .section-title { font-size: 1.1rem; color: var(--primary-red); margin: 25px 0 15px; border-bottom: 2px solid var(--bg-color); padding-bottom: 8px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 200px; }
+        
+        label { display: block; margin-bottom: 5px; color: var(--text-light); font-size: 0.9rem; font-weight: 500; }
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="time"], select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; background-color: white; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary-red); outline: none; }
+        
+        .grid-umbrales { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        .btn { width: 100%; background-color: var(--primary-red); color: white; border: none; padding: 14px; border-radius: 6px; font-size: 1.05rem; cursor: pointer; transition: 0.3s; font-weight: bold; margin-top: 25px; }
+        .btn:hover { background-color: var(--hover-red); }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-light); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: var(--primary-red); }
+
+        @media (max-width: 600px) { .row { flex-direction: column; gap: 0; } .grid-umbrales { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Registro de Banco de Sangre</h2>
+        <p class="subtitle">Integra tu institución a la red ROMAN y gestiona tu inventario.</p>
+        
+        {{if .ErrorMessage}}
+        <div style="background-color: #ffebee; color: var(--primary-red); padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; border: 1px solid #ffcdd2;">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+        
+        <form action="/banco/registro" method="POST">
+            
+            <h3 class="section-title">1. Cuenta e Identidad</h3>
+            <div class="row">
+                <div class="form-group col">
+                    <label>Nombre del Banco / Institución:</label>
+                    <input type="text" name="nombreBanco" placeholder="Ej. Cruz Roja Central" required>
+                </div>
+                <div class="form-group col">
+                    <label>Tipo de Institución:</label>
+                    <select name="tipoInstitucion" required>
+                        <option value="" disabled selected>Selecciona</option>
+                        <option value="cruz_roja">Cruz Roja</option>
+                        <option value="hospital">Hospital</option>
+                        <option value="independiente">Centro Independiente</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="form-group col">
+                    <label>Correo Electrónico (Institucional):</label>
+                    <input type="email" name="email" placeholder="banco@ejemplo.com" required>
+                </div>
+                <div class="form-group col">
+                    <label>Contraseña de Acceso:</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <h3 class="section-title">2. Logística y Capacidad</h3>
+            <div class="row">
+                <div class="form-group col">
+                    <label>Capacidad Máxima (Unidades):</label>
+                    <input type="number" name="capacidad" min="1" placeholder="Ej. 5000" required>
+                </div>
+                <div class="form-group col">
+                    <label>Hora de Apertura:</label>
+                    <input type="time" name="apertura" required>
+                </div>
+                <div class="form-group col">
+                    <label>Hora de Cierre:</label>
+                    <input type="time" name="cierre" required>
+                </div>
+            </div>
+
+            <h3 class="section-title">3. Configuración de Umbrales Críticos</h3>
+            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Indica el nivel mínimo de unidades antes de disparar una alerta.</p>
+            <div class="grid-umbrales">
+                <div class="form-group"><label>O+</label><input type="number" name="umbral_O+" value="50" min="0"></div>
+                <div class="form-group"><label>O-</label><input type="number" name="umbral_O-" value="20" min="0"></div>
+                <div class="form-group"><label>A+</label><input type="number" name="umbral_A+" value="40" min="0"></div>
+                <div class="form-group"><label>A-</label><input type="number" name="umbral_A-" value="15" min="0"></div>
+                <div class="form-group"><label>B+</label><input type="number" name="umbral_B+" value="30" min="0"></div>
+                <div class="form-group"><label>B-</label><input type="number" name="umbral_B-" value="10" min="0"></div>
+                <div class="form-group"><label>AB+</label><input type="number" name="umbral_AB+" value="10" min="0"></div>
+                <div class="form-group"><label>AB-</label><input type="number" name="umbral_AB-" value="5" min="0"></div>
+            </div>
+
+            <h3 class="section-title">4. Personal y Contacto de Emergencia</h3>
+            <div class="row">
+                <div class="form-group col">
+                    <label>Nombre del Responsable:</label>
+                    <input type="text" name="resp_nombre" placeholder="Ej. Dr. López" required>
+                </div>
+                <div class="form-group col">
+                    <label>Cargo:</label>
+                    <input type="text" name="resp_cargo" placeholder="Ej. Director Médico" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col">
+                    <label>Teléfono de Emergencia (24/7):</label>
+                    <input type="tel" name="tel_emergencia" placeholder="10 dígitos" required>
+                </div>
+            </div>
+
+            <h3 class="section-title">5. Ubicación Geográfica</h3>
+            <div class="form-group">
+                <label>Dirección Oficial:</label>
+                <input type="text" name="direccion" placeholder="Calle y número" required>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Selecciona tu ubicación en el mapa:</label>
+                    <div id="map" style="height: 300px; border-radius: 8px;"></div>
+                </div>
+
+                <input type="hidden" name="latitud">
+                <input type="hidden" name="longitud">
+            </div>
+
+            <button type="submit" class="btn">Registrar Banco de Sangre</button>
+        </form>
+        <a href="/banco/auth" class="back-link">← Cancelar y volver a opciones</a>
+    </div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const defaultLat = 19.4326;
+    const defaultLng = -99.1332;
+
+    const map = L.map('map').setView([defaultLat, defaultLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+    function actualizarUbicacion(lat, lng) {
+        document.querySelector('[name="latitud"]').value = lat;
+        document.querySelector('[name="longitud"]').value = lng;
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.display_name) {
+                    document.querySelector('[name="direccion"]').value = data.display_name;
+                }
+            });
+    }
+
+    marker.on('dragend', function () {
+        const pos = marker.getLatLng();
+        actualizarUbicacion(pos.lat, pos.lng);
+    });
+
+    map.on('click', function (e) {
+        marker.setLatLng(e.latlng);
+        actualizarUbicacion(e.latlng.lat, e.latlng.lng);
+    });
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            map.setView([lat, lng], 15);
+            marker.setLatLng([lat, lng]);
+            actualizarUbicacion(lat, lng);
+        });
+    } else {
+        actualizarUbicacion(defaultLat, defaultLng);
+    }
+});
+</script>
+</body>
+</html>

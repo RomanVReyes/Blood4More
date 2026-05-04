@@ -38,12 +38,21 @@ func main() {
 		http.ServeFile(w, r, "templates/index.html")
 	})
 
+	//Rutas para donantes
 	http.HandleFunc("/donante", handlers.RedirectDonorEntry)
 	http.HandleFunc("/donante/auth", handlers.ShowDonorAuth)
 	http.HandleFunc("/donante/login", handlers.ShowDonorLogin)
 	http.HandleFunc("/donante/registro", handlers.ShowDonorRegister)
 	http.HandleFunc("/donante/dashboard", handlers.AuthMiddleware(handlers.ShowDonorDashboard))
 	http.HandleFunc("/donante/logout", handlers.LogoutHandler)
+
+	//Rutas para bancos
+	//http.HandleFunc("/banco", handlers.RedirectBancoEntry)
+	http.HandleFunc("/banco/auth", handlers.ShowBancoAuth)
+	//http.HandleFunc("/banco/login", handlers.ShowBancoLogin)
+	http.HandleFunc("/banco/registro", handlers.ShowBancoRegister)
+	//http.HandleFunc("/banco/dashboard", handlers.AuthMiddleware(handlers.ShowBancoDashboard))
+	http.HandleFunc("/banco/logout", handlers.LogoutHandler)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Sistema operando correctamente")

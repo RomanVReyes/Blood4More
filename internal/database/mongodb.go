@@ -13,7 +13,6 @@ import (
 
 var MongoClient *mongo.Client
 
-// ConnectDB inicializa la conexión a MongoDB
 func ConnectDB() *mongo.Client {
 	uri := os.Getenv("MONGO_URI")
 	if uri == "" {
@@ -28,7 +27,6 @@ func ConnectDB() *mongo.Client {
 		log.Fatal("No se pudo conectar a MongoDB:", err)
 	}
 
-	// Verificar la conexión
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal("No se pudo hacer ping a MongoDB:", err)
