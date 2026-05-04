@@ -145,6 +145,7 @@ func ShowDonorRegister(w http.ResponseWriter, r *http.Request) {
 
 // Mostrar la página principal de opciones para el donante (Auth)
 func ShowDonorAuth(w http.ResponseWriter, r *http.Request) {
+	log.Println("AUTH HANDLER")
 	if r.Method == http.MethodGet {
 		http.ServeFile(w, r, "templates/donante_auth.html")
 		return
@@ -152,17 +153,18 @@ func ShowDonorAuth(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 }
 
-// =======================
-// LOGIN
-// =======================
 func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
 	type LoginData struct {
 		ErrorMessage string
 	}
 
-	if r.Method == http.MethodGet {
+	render := func(msg string) {
 		tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
-		tmpl.Execute(w, LoginData{})
+		tmpl.Execute(w, LoginData{ErrorMessage: msg})
+	}
+
+	if r.Method == http.MethodGet {
+		render("")
 		return
 	}
 
@@ -170,117 +172,73 @@ func ShowDonorLogin(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		// 🔎 Buscar usuario en DB
 		donante, err := repository.GetDonanteByEmail(email)
 		if err != nil {
-			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
-			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
+			render("Correo o contraseña incorrectos")
 			return
 		}
 
-		// 🔐 Comparar password
 		err = bcrypt.CompareHashAndPassword([]byte(donante.Password), []byte(password))
 		if err != nil {
-			tmpl := template.Must(template.ParseFiles("templates/donante_login.html"))
-			tmpl.Execute(w, LoginData{ErrorMessage: "Correo o contraseña incorrectos"})
+			render("Correo o contraseña incorrectos")
 			return
 		}
 
-		// 🎟️ CREAR LA SESIÓN EN MONGODB
-		sessionID := generateSessionID()
-		expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 días
-
-		nuevaSesion := models.Sesion{
-			ID:        sessionID,
-			UserEmail: donante.DatosContacto.Correo,
-			CreatedAt: time.Now(),
-			ExpiresAt: expiresAt,
-			IsActive:  true,
-			IP:        r.RemoteAddr,
-			UserAgent: r.UserAgent(),
-		}
-
-		err = repository.CreateSession(nuevaSesion)
+		err = StartUserSession(w, donante.ID, r)
 		if err != nil {
 			http.Error(w, "Error creando sesión", http.StatusInternalServerError)
 			return
 		}
 
-		// 🍪 GUARDAR EL ID DE SESIÓN EN UNA COOKIE
-		http.SetCookie(w, &http.Cookie{
-			Name:     "roman_session",
-			Value:    sessionID,
-			Expires:  expiresAt,
-			Path:     "/",
-			HttpOnly: true,  // Importante: evita ataques XSS
-			Secure:   false, // Cambiar a 'true' cuando uses HTTPS en producción
-			SameSite: http.SameSiteLaxMode,
-		})
-
-		// Redirigir al dashboard
 		http.Redirect(w, r, "/donante/dashboard", http.StatusSeeOther)
 	}
 }
 
-// =======================
-// DASHBOARD (Protegido)
-// =======================
 func ShowDonorDashboard(w http.ResponseWriter, r *http.Request) {
-	// 1. Pedir el "gafete" (la cookie de sesión)
-	cookie, err := r.Cookie("roman_session")
-	if err != nil {
-		// No trae gafete -> Pa' fuera (al login)
+
+	// 1. Obtener userID desde contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
 		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
 		return
 	}
 
-	// 2. Revisar si la sesión existe y está activa en MongoDB
-	sesion, err := repository.GetSession(cookie.Value)
-	if err != nil || sesion.ExpiresAt.Before(time.Now()) {
-		// Gafete falso o expirado -> Limpiar cookie y pa' fuera
-		http.SetCookie(w, &http.Cookie{
-			Name:   "roman_session",
-			Value:  "",
-			MaxAge: -1,
-			Path:   "/",
-		})
-		http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
-		return
-	}
-
-	// 3. Buscar todos los datos del donante usando el email guardado en la sesión
-	donante, err := repository.GetDonanteByEmail(sesion.UserEmail)
+	// 2. Buscar donante en DB
+	donante, err := repository.GetDonanteByID(userID)
 	if err != nil {
-		http.Redirect(w, r, "/donante/logout", http.StatusSeeOther)
+		http.Error(w, "Error cargando datos", http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Enviar los datos al HTML
+	// 3. Renderizar HTML con datos reales
 	tmpl := template.Must(template.ParseFiles("templates/donante_dashboard.html"))
 	tmpl.Execute(w, donante)
 }
 
-// =======================
-// CERRAR SESIÓN (Logout)
-// =======================
-func LogoutDonante(w http.ResponseWriter, r *http.Request) {
-	// 1. Obtener la cookie actual
-	cookie, err := r.Cookie("roman_session")
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("LOGOUT EJECUTADO")
+
+	sessionID, err := GetSessionID(r)
 	if err == nil {
-		// 2. Borrar la sesión de MongoDB para que ya no sirva
-		_ = repository.DeleteSession(cookie.Value)
+		_ = DeactivateUserSession(w, sessionID)
 	}
 
-	// 3. Destruir la cookie en el navegador del usuario
-	http.SetCookie(w, &http.Cookie{
-		Name:     "roman_session",
-		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour), // Fecha en el pasado
-		MaxAge:   -1,
-		Path:     "/",
-		HttpOnly: true,
-	})
+	http.Redirect(w, r, "/donante/auth", http.StatusSeeOther)
+}
 
-	// 4. Redirigir a la página de inicio o login
-	http.Redirect(w, r, "/donante/login", http.StatusSeeOther)
+func RedirectDonorEntry(w http.ResponseWriter, r *http.Request) {
+
+	sessionID, err := GetSessionID(r)
+	if err != nil {
+		http.Redirect(w, r, "/donante/auth", http.StatusSeeOther)
+		return
+	}
+
+	sesion, err := repository.GetSessionByID(sessionID)
+	if err != nil || !sesion.IsActive || time.Now().After(sesion.ExpiresAt) {
+		http.Redirect(w, r, "/donante/auth", http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/donante/dashboard", http.StatusSeeOther)
 }

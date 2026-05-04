@@ -2,9 +2,9 @@ package models
 
 import "time"
 
-type Sesion struct {
+type Session struct {
 	ID        string    `bson:"_id"`
-	UserEmail string    `bson:"user_email"`
+	UserID    string    `bson:"user_id"`
 	CreatedAt time.Time `bson:"created_at"`
 	ExpiresAt time.Time `bson:"expires_at"`
 	IsActive  bool      `bson:"is_active"`

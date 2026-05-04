@@ -29,15 +29,21 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Petición recibida en ROOT. Path: %s", r.URL.Path)
+
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		http.ServeFile(w, r, "templates/index.html")
 	})
 
-	// Rutas de Donante
-	http.HandleFunc("/donante", handlers.ShowDonorAuth)
+	http.HandleFunc("/donante", handlers.RedirectDonorEntry)
+	http.HandleFunc("/donante/auth", handlers.ShowDonorAuth)
 	http.HandleFunc("/donante/login", handlers.ShowDonorLogin)
 	http.HandleFunc("/donante/registro", handlers.ShowDonorRegister)
-
-	http.HandleFunc("/donante/dashboard", handlers.ShowDonorDashboard)
+	http.HandleFunc("/donante/dashboard", handlers.AuthMiddleware(handlers.ShowDonorDashboard))
+	http.HandleFunc("/donante/logout", handlers.LogoutHandler)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Sistema operando correctamente")

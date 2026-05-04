@@ -9,6 +9,10 @@ import (
 	"roman-sangre/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+
+	"fmt"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Obtener los catálogos de padecimientos y medicamentos
@@ -69,4 +73,48 @@ func GetDonanteByEmail(email string) (models.Donante, error) {
 	}).Decode(&donante)
 
 	return donante, err
+}
+
+func GetDonanteByID(id string) (models.Donante, error) {
+	collection := database.GetCollection("donantes")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return models.Donante{}, err
+	}
+
+	var donante models.Donante
+
+	err = collection.FindOne(ctx, map[string]interface{}{
+		"_id": objID,
+	}).Decode(&donante)
+
+	if err != nil {
+		return models.Donante{}, err
+	}
+
+	return donante, nil
+}
+
+func DeleteSessionByID(sessionID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := database.GetCollection("sesiones")
+
+	filter := bson.M{"id": sessionID}
+
+	result, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("no se encontró la sesión")
+	}
+
+	return nil
 }

@@ -2,41 +2,59 @@ package repository
 
 import (
 	"context"
-	"roman-sangre/internal/database"
-	"roman-sangre/internal/models"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"roman-sangre/internal/database"
+	"roman-sangre/internal/models"
 )
 
-// Obtener la colección de sesiones
-func getSesionesCollection() *mongo.Collection {
-	return database.GetCollection("sesiones") // ✅ Usa tu función helper
-}
+const sessionCollection = "sesiones"
 
-func CreateSession(sesion models.Sesion) error {
+func CreateSession(sesion models.Session) error {
+	collection := database.GetCollection(sessionCollection)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := getSesionesCollection().InsertOne(ctx, sesion)
+	_, err := collection.InsertOne(ctx, sesion)
 	return err
 }
 
-func GetSession(sessionID string) (models.Sesion, error) {
+func GetSessionByID(sessionID string) (models.Session, error) {
+	collection := database.GetCollection(sessionCollection)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var sesion models.Sesion
-	err := getSesionesCollection().FindOne(ctx, bson.M{"_id": sessionID, "is_active": true}).Decode(&sesion)
-	return sesion, err
+	var sesion models.Session
+
+	err := collection.FindOne(ctx, map[string]interface{}{
+		"_id":       sessionID,
+		"is_active": true,
+	}).Decode(&sesion)
+
+	if err != nil {
+		return models.Session{}, err
+	}
+
+	return sesion, nil
 }
 
-func DeleteSession(sessionID string) error {
+func DeactivateSession(sessionID string) error {
+	collection := database.GetCollection(sessionCollection)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Es mejor práctica hacer un "soft delete" (is_active: false) o directamente borrarla
-	_, err := getSesionesCollection().DeleteOne(ctx, bson.M{"_id": sessionID})
+	_, err := collection.UpdateOne(
+		ctx,
+		map[string]interface{}{"_id": sessionID},
+		map[string]interface{}{
+			"$set": map[string]interface{}{
+				"is_active": false,
+			},
+		},
+	)
+
 	return err
 }
